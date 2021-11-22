@@ -60,7 +60,9 @@ import com.twilio.video.TwilioException;
 import com.twilio.video.Video;
 import com.twilio.video.VideoBandwidthProfileOptions;
 import com.twilio.video.VideoCodec;
+import com.twilio.video.VideoContentPreferences;
 import com.twilio.video.VideoContentPreferencesMode;
+import com.twilio.video.VideoDimensions;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 import com.twilio.video.Vp8Codec;
@@ -502,11 +504,15 @@ public class VideoActivity extends AppCompatActivity {
          */
         connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription)
                 .bandwidthProfile(new BandwidthProfileOptions(new VideoBandwidthProfileOptions.Builder()
-                         .dominantSpeakerPriority(TrackPriority.HIGH)
-                         .mode(BandwidthProfileMode.PRESENTATION)
-                         .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
+//                         .dominantSpeakerPriority(TrackPriority.HIGH)
+                        .dominantSpeakerPriority(TrackPriority.STANDARD)
+//                         .mode(BandwidthProfileMode.PRESENTATION)
+                        .mode(BandwidthProfileMode.GRID) // default
+//                         .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
+                         .trackSwitchOffMode(TrackSwitchOffMode.PREDICTED) // default
                          .clientTrackSwitchOffControl(ClientTrackSwitchOffControl.AUTO)
-                         .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL)
+//                         .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL)
+                        .videoContentPreferencesMode(VideoContentPreferencesMode.AUTO) // default
                         .build()
                 ));
 
@@ -1092,6 +1098,7 @@ public class VideoActivity extends AppCompatActivity {
                                 remoteParticipant.getIdentity(),
                                 remoteVideoTrack.isEnabled(),
                                 remoteVideoTrack.getName()));
+//                remoteVideoTrack.setContentPreferences(new VideoContentPreferences(new VideoDimensions(640, 480)));
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
