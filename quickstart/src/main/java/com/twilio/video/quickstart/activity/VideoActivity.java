@@ -504,15 +504,15 @@ public class VideoActivity extends AppCompatActivity {
          */
         connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription)
                 .bandwidthProfile(new BandwidthProfileOptions(new VideoBandwidthProfileOptions.Builder()
-//                         .dominantSpeakerPriority(TrackPriority.HIGH)
-                        .dominantSpeakerPriority(TrackPriority.STANDARD)
-//                         .mode(BandwidthProfileMode.PRESENTATION)
-                        .mode(BandwidthProfileMode.GRID) // default
-//                         .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
-                         .trackSwitchOffMode(TrackSwitchOffMode.PREDICTED) // default
+                        .dominantSpeakerPriority(TrackPriority.HIGH)
+                        // .dominantSpeakerPriority(TrackPriority.STANDARD)
+                        .mode(BandwidthProfileMode.PRESENTATION)
+                        // .mode(BandwidthProfileMode.GRID) // default
+                        .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
+                        //  .trackSwitchOffMode(TrackSwitchOffMode.PREDICTED) // default
                          .clientTrackSwitchOffControl(ClientTrackSwitchOffControl.AUTO)
-//                         .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL)
-                        .videoContentPreferencesMode(VideoContentPreferencesMode.AUTO) // default
+                        .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL)
+                        // .videoContentPreferencesMode(VideoContentPreferencesMode.AUTO) // default
                         .build()
                 ));
 
@@ -1098,7 +1098,7 @@ public class VideoActivity extends AppCompatActivity {
                                 remoteParticipant.getIdentity(),
                                 remoteVideoTrack.isEnabled(),
                                 remoteVideoTrack.getName()));
-//                remoteVideoTrack.setContentPreferences(new VideoContentPreferences(new VideoDimensions(640, 480)));
+               remoteVideoTrack.setContentPreferences(new VideoContentPreferences(new VideoDimensions(640, 480)));
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
