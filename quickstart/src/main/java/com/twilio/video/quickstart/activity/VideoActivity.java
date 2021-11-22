@@ -32,6 +32,9 @@ import com.twilio.audioswitch.AudioDevice.Speakerphone;
 import com.twilio.audioswitch.AudioDevice.WiredHeadset;
 import com.twilio.audioswitch.AudioSwitch;
 import com.twilio.video.AudioCodec;
+import com.twilio.video.BandwidthProfileMode;
+import com.twilio.video.BandwidthProfileOptions;
+import com.twilio.video.ClientTrackSwitchOffControl;
 import com.twilio.video.ConnectOptions;
 import com.twilio.video.EncodingParameters;
 import com.twilio.video.G722Codec;
@@ -51,9 +54,13 @@ import com.twilio.video.RemoteParticipant;
 import com.twilio.video.RemoteVideoTrack;
 import com.twilio.video.RemoteVideoTrackPublication;
 import com.twilio.video.Room;
+import com.twilio.video.TrackPriority;
+import com.twilio.video.TrackSwitchOffMode;
 import com.twilio.video.TwilioException;
 import com.twilio.video.Video;
+import com.twilio.video.VideoBandwidthProfileOptions;
 import com.twilio.video.VideoCodec;
+import com.twilio.video.VideoContentPreferencesMode;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 import com.twilio.video.Vp8Codec;
@@ -441,6 +448,8 @@ public class VideoActivity extends AppCompatActivity {
              * the variable TWILIO_ACCESS_TOKEN setting it equal to the access token
              * string in your local.properties file.
              */
+            System.out.println("-----ee------ WILIO_ACCESS_TOKEN -----");
+            System.out.println(TWILIO_ACCESS_TOKEN);
             this.accessToken = TWILIO_ACCESS_TOKEN;
         } else {
             /*
@@ -454,6 +463,7 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private void connectToRoom(String roomName) {
+        System.out.println("connectToRoom----------------");
         audioSwitch.activate();
         ConnectOptions.Builder connectOptionsBuilder =
                 new ConnectOptions.Builder(accessToken).roomName(roomName);
@@ -490,8 +500,19 @@ public class VideoActivity extends AppCompatActivity {
          * published. If unset, the default is true. Note: This feature is only available for Group
          * Rooms. Toggling the flag in a P2P room does not modify subscription behavior.
          */
-        connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription);
+        connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription)
+                .bandwidthProfile(new BandwidthProfileOptions(new VideoBandwidthProfileOptions.Builder()
+                         .dominantSpeakerPriority(TrackPriority.HIGH)
+                         .mode(BandwidthProfileMode.PRESENTATION)
+                         .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
+                         .clientTrackSwitchOffControl(ClientTrackSwitchOffControl.AUTO)
+                         .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL)
+                        .build()
+                ));
 
+
+
+        System.out.println("<<<<<<<<<<<<<<<<<<connect connect connect>>>>>>>>>>>>>>");
         room = Video.connect(this, connectOptionsBuilder.build(), roomListener());
         setDisconnectAction();
     }
@@ -640,6 +661,7 @@ public class VideoActivity extends AppCompatActivity {
      * Creates an connect UI dialog
      */
     private void showConnectDialog() {
+        System.out.println("--------showConnectDialog");
         EditText roomEditText = new EditText(this);
         connectDialog =
                 Dialog.createConnectDialog(
@@ -760,9 +782,12 @@ public class VideoActivity extends AppCompatActivity {
      */
     @SuppressLint("SetTextI18n")
     private Room.Listener roomListener() {
-        return new Room.Listener() {
+
+    System.out.println("--------roomListener");
+    return new Room.Listener() {
             @Override
             public void onConnected(Room room) {
+                System.out.println("--------onConnected");
                 localParticipant = room.getLocalParticipant();
                 setTitle(room.getName());
 
@@ -785,12 +810,17 @@ public class VideoActivity extends AppCompatActivity {
 
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
+                System.out.println("--------onConnectFailure");
+                System.out.println("ddd");
+                System.out.println(room);
+                System.out.println(e);
                 audioSwitch.deactivate();
                 intializeUI();
             }
 
             @Override
             public void onDisconnected(Room room, TwilioException e) {
+                System.out.println("--------onDisconnected");
                 localParticipant = null;
                 reconnectingProgressBar.setVisibility(View.GONE);
                 VideoActivity.this.room = null;
@@ -804,6 +834,7 @@ public class VideoActivity extends AppCompatActivity {
 
             @Override
             public void onParticipantConnected(Room room, RemoteParticipant remoteParticipant) {
+                System.out.println("--------onParticipantConnected");
                 addRemoteParticipant(remoteParticipant);
             }
 
@@ -1130,6 +1161,7 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private DialogInterface.OnClickListener connectClickListener(final EditText roomEditText) {
+        System.out.println("--------OnClickListener");
         return (dialog, which) -> {
             /*
              * Connect to room
