@@ -63,6 +63,7 @@ import com.twilio.video.VideoCodec;
 import com.twilio.video.VideoContentPreferences;
 import com.twilio.video.VideoContentPreferencesMode;
 import com.twilio.video.VideoDimensions;
+import com.twilio.video.VideoFormat;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 import com.twilio.video.Vp8Codec;
@@ -140,6 +141,7 @@ public class VideoActivity extends AppCompatActivity {
      * Android application UI elements
      */
     private CameraCapturerCompat cameraCapturerCompat;
+    private VideoFormat videoFormat;
     private LocalAudioTrack localAudioTrack;
     private LocalVideoTrack localVideoTrack;
     private FloatingActionButton connectActionFab;
@@ -435,8 +437,13 @@ public class VideoActivity extends AppCompatActivity {
         // Share your camera
         cameraCapturerCompat =
                 new CameraCapturerCompat(this, CameraCapturerCompat.Source.FRONT_CAMERA);
+//HD_720P_VIDEO_DIMENSIONS
+//HD 720P (1280 x 720) resolution
+
+        videoFormat = new VideoFormat(VideoDimensions.HD_720P_VIDEO_DIMENSIONS, 15);
+
         localVideoTrack =
-                LocalVideoTrack.create(this, true, cameraCapturerCompat, LOCAL_VIDEO_TRACK_NAME);
+                LocalVideoTrack.create(this, true, cameraCapturerCompat,videoFormat , LOCAL_VIDEO_TRACK_NAME);
         primaryVideoView.setMirror(true);
         localVideoTrack.addSink(primaryVideoView);
         localVideoView = primaryVideoView;
