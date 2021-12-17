@@ -13,10 +13,11 @@ public class Dialog {
             DialogInterface.OnClickListener callParticipantsClickListener,
             DialogInterface.OnClickListener cancelClickListener,
             Context context) {
+        System.out.println("-- createConnectDialog");
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
 
         alertDialogBuilder.setIcon(R.drawable.ic_video_call_white_24dp);
-        alertDialogBuilder.setTitle("Connect to a room");
+        alertDialogBuilder.setTitle("Connect to a room ss");
         alertDialogBuilder.setPositiveButton("Connect", callParticipantsClickListener);
         alertDialogBuilder.setNegativeButton("Cancel", cancelClickListener);
         alertDialogBuilder.setCancelable(false);
@@ -28,6 +29,7 @@ public class Dialog {
 
     private static void setRoomNameFieldInDialog(
             EditText roomNameEditText, AlertDialog.Builder alertDialogBuilder) {
+        System.out.println("----- setRoomNameFieldInDialog");
         roomNameEditText.setHint("room name");
         alertDialogBuilder.setView(roomNameEditText);
     }

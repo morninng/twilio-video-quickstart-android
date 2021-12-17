@@ -141,7 +141,7 @@ public class VideoActivity extends AppCompatActivity {
      * Android application UI elements
      */
     private CameraCapturerCompat cameraCapturerCompat;
-    private VideoFormat videoFormat;
+//    private VideoFormat videoFormat;
     private LocalAudioTrack localAudioTrack;
     private LocalVideoTrack localVideoTrack;
     private FloatingActionButton connectActionFab;
@@ -430,17 +430,52 @@ public class VideoActivity extends AppCompatActivity {
         requestPermissions(permissionsList);
     }
 
-    private void createAudioAndVideoTracks() {
+    private <VideoConstraints> void createAudioAndVideoTracks() {
         // Share your microphone
         localAudioTrack = LocalAudioTrack.create(this, true, LOCAL_AUDIO_TRACK_NAME);
 
         // Share your camera
         cameraCapturerCompat =
                 new CameraCapturerCompat(this, CameraCapturerCompat.Source.FRONT_CAMERA);
+
+
+
+
+
+
+        // updated
+
+
+
+
+
 //HD_720P_VIDEO_DIMENSIONS
 //HD 720P (1280 x 720) resolution
+//        HD_960P_VIDEO_DIMENSIONS
+//        HD 960P (1280 x 960) resolution
+//HD_540P_VIDEO_DIMENSIONS
+//HD 540P (960 x 540) resolution
 
-        videoFormat = new VideoFormat(VideoDimensions.HD_720P_VIDEO_DIMENSIONS, 15);
+//        CIF_VIDEO_DIMENSIONS
+//CIF (352 x 288) resolution in 1.22:1 aspect ratio
+
+        // VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_720P_VIDEO_DIMENSIONS, 30); //
+
+        // VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 30); //HD_1080P_VIDEO_DIMENSIONS
+//        VideoFormat videoFormat = new VideoFormat(VideoDimensions.CIF_VIDEO_DIMENSIONS, 30); //HD_1080P_VIDEO_DIMENSIONS
+        VideoFormat videoFormat = new VideoFormat(VideoDimensions.CIF_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+
+
+
+//        VideoConstraints videoConstraints =
+//                new VideoConstraints.Builder()
+//                        .maxFps(24)
+//                        .maxVideoDimensions(VideoDimensions.VGA_VIDEO_DIMENSIONS)
+//                        .build();
+
+
+
+
 
         localVideoTrack =
                 LocalVideoTrack.create(this, true, cameraCapturerCompat,videoFormat , LOCAL_VIDEO_TRACK_NAME);
@@ -450,6 +485,7 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private void setAccessToken() {
+        System.out.println(">>>>>> setAccessToken setAccessToken<<<<<<<<<<<<<<<<<<");
         if (!BuildConfig.USE_TOKEN_SERVER) {
             /*
              * OPTION 1 - Generate an access token from the getting started portal
@@ -457,22 +493,33 @@ public class VideoActivity extends AppCompatActivity {
              * the variable TWILIO_ACCESS_TOKEN setting it equal to the access token
              * string in your local.properties file.
              */
+
+
+
+
+
             System.out.println("-----ee------ WILIO_ACCESS_TOKEN -----");
             System.out.println(TWILIO_ACCESS_TOKEN);
             this.accessToken = TWILIO_ACCESS_TOKEN;
         } else {
+            System.out.println("----------  USE_TOKEN_SERVER -------------");
             /*
              * OPTION 2 - Retrieve an access token from your own web app.
              * Add the variable ACCESS_TOKEN_SERVER assigning it to the url of your
              * token server and the variable USE_TOKEN_SERVER=true to your
              * local.properties file.
              */
+
+
+
+             
             retrieveAccessTokenfromServer();
         }
     }
 
     private void connectToRoom(String roomName) {
         System.out.println("connectToRoom----------------");
+        System.out.println(accessToken);
         audioSwitch.activate();
         ConnectOptions.Builder connectOptionsBuilder =
                 new ConnectOptions.Builder(accessToken).roomName(roomName);
@@ -509,17 +556,24 @@ public class VideoActivity extends AppCompatActivity {
          * published. If unset, the default is true. Note: This feature is only available for Group
          * Rooms. Toggling the flag in a P2P room does not modify subscription behavior.
          */
+
+        // updated part
+
+
         connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription)
                 .bandwidthProfile(new BandwidthProfileOptions(new VideoBandwidthProfileOptions.Builder()
                         .dominantSpeakerPriority(TrackPriority.HIGH)
+//                        .dominantSpeakerPriority(TrackPriority.LOW)
                         // .dominantSpeakerPriority(TrackPriority.STANDARD)
                         .mode(BandwidthProfileMode.PRESENTATION)
                         // .mode(BandwidthProfileMode.GRID) // default
-                        .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
-                        //  .trackSwitchOffMode(TrackSwitchOffMode.PREDICTED) // default
+//                        .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
+//                          .trackSwitchOffMode(TrackSwitchOffMode.PREDICTED) // default
+                        .trackSwitchOffMode(TrackSwitchOffMode.DISABLED)
                          .clientTrackSwitchOffControl(ClientTrackSwitchOffControl.AUTO)
-                        .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL)
-                        // .videoContentPreferencesMode(VideoContentPreferencesMode.AUTO) // default
+                        .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL) // 影響大きそう。
+//                         .videoContentPreferencesMode(VideoContentPreferencesMode.AUTO) // default
+                        .maxSubscriptionBitrate(0L)
                         .build()
                 ));
 
@@ -823,6 +877,20 @@ public class VideoActivity extends AppCompatActivity {
 
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
+
+                System.out.println("--------onConnectFailu1re");
+                System.out.println("--------onConnectFailur2e");
+                System.out.println("--------onConnectFailure3");
+                System.out.println("--------onConnectFailure4");
+                System.out.println("--------onConnectFailure5");
+                System.out.println("--------onConnectFailure6");
+                System.out.println("--------onConnectFailure7");
+                System.out.println("--------onConnectFailure8");
+                System.out.println("--------onConnectFailure9");
+                System.out.println("--------onConnectFailure");
+                System.out.println("--------onConnectFailure");
+                System.out.println("--------onConnectFailure");
+                System.out.println("--------onConnectFailure");
                 System.out.println("--------onConnectFailure");
                 System.out.println("ddd");
                 System.out.println(room);
@@ -1105,7 +1173,11 @@ public class VideoActivity extends AppCompatActivity {
                                 remoteParticipant.getIdentity(),
                                 remoteVideoTrack.isEnabled(),
                                 remoteVideoTrack.getName()));
-               remoteVideoTrack.setContentPreferences(new VideoContentPreferences(new VideoDimensions(640, 480)));
+
+   // updated part
+
+
+               remoteVideoTrack.setContentPreferences(new VideoContentPreferences(new VideoDimensions(1280, 720)));
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
@@ -1262,6 +1334,8 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private void retrieveAccessTokenfromServer() {
+        System.out.println("-------------- retrieveAccessTokenfromServer");
+        System.out.println(ACCESS_TOKEN_SERVER);
         Ion.with(this)
                 .load(
                         String.format(
@@ -1270,6 +1344,8 @@ public class VideoActivity extends AppCompatActivity {
                 .asString()
                 .setCallback(
                         (e, token) -> {
+                            System.out.println("-------------- retrieveAccessTokenfromServer token");
+                            System.out.println(token);
                             if (e == null) {
                                 VideoActivity.this.accessToken = token;
                             } else {
