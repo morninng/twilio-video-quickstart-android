@@ -173,7 +173,7 @@ public class VideoActivity extends AppCompatActivity {
         reconnectingProgressBar = findViewById(R.id.reconnecting_progress_bar);
 
         connectActionFab = findViewById(R.id.connect_action_fab);
-        switchCameraActionFab = findViewById(R.id.switch_camera_action_fab);
+        switchCameraActionFab = findViewById(R.id.switch_camera_action_fab); // camera switching
         localVideoActionFab = findViewById(R.id.local_video_action_fab);
         muteActionFab = findViewById(R.id.mute_action_fab);
 
@@ -271,6 +271,10 @@ public class VideoActivity extends AppCompatActivity {
     @SuppressLint("SetTextI18n")
     @Override
     protected void onResume() {
+
+        System.out.println("<<<<<<<<<<onResume>>>>>>>>>>>>>");
+
+
         super.onResume();
         /*
          * Update preferred audio and video codec in case changed in settings
@@ -295,10 +299,19 @@ public class VideoActivity extends AppCompatActivity {
         /*
          * If the local video track was released when the app was put in the background, recreate.
          */
+
+
+
         if (localVideoTrack == null && checkPermissionForCameraAndMicrophone()) {
+
+            System.out.println("<<<<<<<<<<< create local track by resume >>>>>>>>>>>>>>>");
+
+            VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+
+
             localVideoTrack =
                     LocalVideoTrack.create(
-                            this, true, cameraCapturerCompat, LOCAL_VIDEO_TRACK_NAME);
+                            this, true, cameraCapturerCompat, videoFormat, LOCAL_VIDEO_TRACK_NAME);
             localVideoTrack.addSink(localVideoView);
 
             /*
@@ -447,7 +460,8 @@ public class VideoActivity extends AppCompatActivity {
 
 
 
-
+// HD_1080P_VIDEO_DIMENSIONS
+// HD Widescreen 1080P (1920 x 1080) resolution
 
 //HD_720P_VIDEO_DIMENSIONS
 //HD 720P (1280 x 720) resolution
@@ -462,8 +476,8 @@ public class VideoActivity extends AppCompatActivity {
         // VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_720P_VIDEO_DIMENSIONS, 30); //
 
         // VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 30); //HD_1080P_VIDEO_DIMENSIONS
-//        VideoFormat videoFormat = new VideoFormat(VideoDimensions.CIF_VIDEO_DIMENSIONS, 30); //HD_1080P_VIDEO_DIMENSIONS
-        VideoFormat videoFormat = new VideoFormat(VideoDimensions.CIF_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+//        VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+        VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
 
 
 
@@ -475,7 +489,7 @@ public class VideoActivity extends AppCompatActivity {
 
 
 
-
+        System.out.println("<<<<<<<<<<<<<<< original local video track create >>>>>>>>>>>");
 
         localVideoTrack =
                 LocalVideoTrack.create(this, true, cameraCapturerCompat,videoFormat , LOCAL_VIDEO_TRACK_NAME);
@@ -1280,9 +1294,17 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private View.OnClickListener switchCameraClickListener() {
+
+        // camera in out switch
+
+        System.out.println("<<<<<<<<<<<switchCameraClickListener>>>>>>>>>>>>>>>>>");
+
         return v -> {
             if (cameraCapturerCompat != null) {
                 CameraCapturerCompat.Source cameraSource = cameraCapturerCompat.getCameraSource();
+
+
+
                 cameraCapturerCompat.switchCamera();
                 if (thumbnailVideoView.getVisibility() == View.VISIBLE) {
                     thumbnailVideoView.setMirror(
