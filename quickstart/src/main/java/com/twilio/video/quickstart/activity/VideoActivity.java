@@ -406,26 +406,26 @@ public class VideoActivity extends AppCompatActivity {
         }
     }
 
-    private boolean checkPermissionForCameraAndMicrophone() {
-        return checkPermissions(
-                new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO});
-    }
+//    private boolean checkPermissionForCameraAndMicrophone() {
+//        return checkPermissions(
+//                new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO});
+//    }
 
-    private void requestPermissionForCameraMicrophoneAndBluetooth() {
-        String[] permissionsList;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            permissionsList =
-                    new String[] {
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.RECORD_AUDIO,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                    };
-        } else {
-            permissionsList =
-                    new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-        }
-        requestPermissions(permissionsList);
-    }
+//    private void requestPermissionForCameraMicrophoneAndBluetooth() {
+//        String[] permissionsList;
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+//            permissionsList =
+//                    new String[] {
+//                        Manifest.permission.CAMERA,
+//                        Manifest.permission.RECORD_AUDIO,
+//                        Manifest.permission.BLUETOOTH_CONNECT
+//                    };
+//        } else {
+//            permissionsList =
+//                    new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
+//        }
+//        requestPermissions(permissionsList);
+//    }
 
     private <VideoConstraints> void createAudioAndVideoTracks() {
         // Share your microphone
