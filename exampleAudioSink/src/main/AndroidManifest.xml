@@ -21,8 +21,7 @@
         tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".AudioSinkActivity"
-            android:configChanges="orientation"
-            android:exported="true">
+            android:configChanges="orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

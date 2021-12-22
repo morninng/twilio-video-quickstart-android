@@ -81,8 +81,6 @@ import tvi.webrtc.VideoSink;
 
 public class VideoActivity extends AppCompatActivity {
     private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
-    private static final int CAMERA_PERMISSION_INDEX = 0;
-    private static final int MIC_PERMISSION_INDEX = 1;
     private static final String TAG = "VideoActivity";
 
     /*
@@ -188,18 +186,13 @@ public class VideoActivity extends AppCompatActivity {
         audioSwitch = new AudioSwitch(getApplicationContext());
         savedVolumeControlStream = getVolumeControlStream();
         setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+
         /*
-         * Check camera and microphone permissions. Needed in Android M. Also, request for bluetooth
-         * permissions for enablement of bluetooth audio routing.
+         * Check camera and microphone permissions. Needed in Android M.
          */
         if (!checkPermissionForCameraAndMicrophone()) {
-            requestPermissionForCameraMicrophoneAndBluetooth();
+            requestPermissionForCameraAndMicrophone();
         } else {
-            audioSwitch.start(
-                    (audioDevices, audioDevice) -> {
-                        updateAudioDeviceIcon(audioDevice);
-                        return Unit.INSTANCE;
-                    });
             createAudioAndVideoTracks();
             setAccessToken();
         }
@@ -215,9 +208,17 @@ public class VideoActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_video_activity, menu);
         audioDeviceMenuItem = menu.findItem(R.id.menu_audio_device);
-        // AudioSwitch has already started and thus notified of the initial selected device
-        // so we need to updates the UI
-        updateAudioDeviceIcon(audioSwitch.getSelectedAudioDevice());
+
+        /*
+         * Start the audio device selector after the menu is created and update the icon when the
+         * selected audio device changes.
+         */
+        audioSwitch.start(
+                (audioDevices, audioDevice) -> {
+                    updateAudioDeviceIcon(audioDevice);
+                    return Unit.INSTANCE;
+                });
+
         return true;
     }
 
@@ -239,25 +240,11 @@ public class VideoActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == CAMERA_MIC_PERMISSION_REQUEST_CODE) {
-            /*
-             * The first two permissions are Camera & Microphone, bluetooth isn't required but
-             * enabling it enables bluetooth audio routing functionality.
-             */
-            boolean cameraAndMicPermissionGranted =
-                    (PackageManager.PERMISSION_GRANTED == grantResults[CAMERA_PERMISSION_INDEX])
-                            & (PackageManager.PERMISSION_GRANTED
-                                    == grantResults[MIC_PERMISSION_INDEX]);
+            boolean cameraAndMicPermissionGranted = true;
 
-            /*
-             * Due to bluetooth permissions being requested at the same time as camera and mic
-             * permissions, AudioSwitch should be started after providing the user the option
-             * to grant the necessary permissions for bluetooth.
-             */
-            audioSwitch.start(
-                    (audioDevices, audioDevice) -> {
-                        updateAudioDeviceIcon(audioDevice);
-                        return Unit.INSTANCE;
-                    });
+            for (int grantResult : grantResults) {
+                cameraAndMicPermissionGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
+            }
 
             if (cameraAndMicPermissionGranted) {
                 createAudioAndVideoTracks();
@@ -276,6 +263,7 @@ public class VideoActivity extends AppCompatActivity {
 
 
         super.onResume();
+
         /*
          * Update preferred audio and video codec in case changed in settings
          */
@@ -398,27 +386,23 @@ public class VideoActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private boolean checkPermissions(String[] permissions) {
-        boolean shouldCheck = true;
-        for (String permission : permissions) {
-            shouldCheck &=
-                    (PackageManager.PERMISSION_GRANTED
-                            == ContextCompat.checkSelfPermission(this, permission));
-        }
-        return shouldCheck;
+    private boolean checkPermissionForCameraAndMicrophone() {
+        int resultCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        int resultMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+        return resultCamera == PackageManager.PERMISSION_GRANTED
+                && resultMic == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void requestPermissions(String[] permissions) {
-        boolean displayRational = false;
-        for (String permission : permissions) {
-            displayRational |=
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, permission);
-        }
-        if (displayRational) {
+    private void requestPermissionForCameraAndMicrophone() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)
+                || ActivityCompat.shouldShowRequestPermissionRationale(
+                        this, Manifest.permission.RECORD_AUDIO)) {
             Toast.makeText(this, R.string.permissions_needed, Toast.LENGTH_LONG).show();
         } else {
             ActivityCompat.requestPermissions(
-                    this, permissions, CAMERA_MIC_PERMISSION_REQUEST_CODE);
+                    this,
+                    new String[] {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO},
+                    CAMERA_MIC_PERMISSION_REQUEST_CODE);
         }
     }
 
@@ -649,20 +633,19 @@ public class VideoActivity extends AppCompatActivity {
      * Update the menu icon based on the currently selected audio device.
      */
     private void updateAudioDeviceIcon(AudioDevice selectedAudioDevice) {
-        if (null != audioDeviceMenuItem) {
-            int audioDeviceMenuIcon = R.drawable.ic_phonelink_ring_white_24dp;
+        int audioDeviceMenuIcon = R.drawable.ic_phonelink_ring_white_24dp;
 
-            if (selectedAudioDevice instanceof BluetoothHeadset) {
-                audioDeviceMenuIcon = R.drawable.ic_bluetooth_white_24dp;
-            } else if (selectedAudioDevice instanceof WiredHeadset) {
-                audioDeviceMenuIcon = R.drawable.ic_headset_mic_white_24dp;
-            } else if (selectedAudioDevice instanceof Earpiece) {
-                audioDeviceMenuIcon = R.drawable.ic_phonelink_ring_white_24dp;
-            } else if (selectedAudioDevice instanceof Speakerphone) {
-                audioDeviceMenuIcon = R.drawable.ic_volume_up_white_24dp;
-            }
-            audioDeviceMenuItem.setIcon(audioDeviceMenuIcon);
+        if (selectedAudioDevice instanceof BluetoothHeadset) {
+            audioDeviceMenuIcon = R.drawable.ic_bluetooth_white_24dp;
+        } else if (selectedAudioDevice instanceof WiredHeadset) {
+            audioDeviceMenuIcon = R.drawable.ic_headset_mic_white_24dp;
+        } else if (selectedAudioDevice instanceof Earpiece) {
+            audioDeviceMenuIcon = R.drawable.ic_phonelink_ring_white_24dp;
+        } else if (selectedAudioDevice instanceof Speakerphone) {
+            audioDeviceMenuIcon = R.drawable.ic_volume_up_white_24dp;
         }
+
+        audioDeviceMenuItem.setIcon(audioDeviceMenuIcon);
     }
 
     /*
