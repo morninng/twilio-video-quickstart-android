@@ -148,6 +148,7 @@ public class VideoActivity extends AppCompatActivity {
     private FloatingActionButton switchCameraActionFab;
     private FloatingActionButton localVideoActionFab;
     private FloatingActionButton muteActionFab;
+    private FloatingActionButton refreshTrackActionFab;
     private ProgressBar reconnectingProgressBar;
     private AlertDialog connectDialog;
     private String remoteParticipantIdentity;
@@ -173,9 +174,13 @@ public class VideoActivity extends AppCompatActivity {
         reconnectingProgressBar = findViewById(R.id.reconnecting_progress_bar);
 
         connectActionFab = findViewById(R.id.connect_action_fab);
+        refreshTrackActionFab = findViewById(R.id.refresh_video_track); //  refresh token
         switchCameraActionFab = findViewById(R.id.switch_camera_action_fab); // camera switching
         localVideoActionFab = findViewById(R.id.local_video_action_fab);
         muteActionFab = findViewById(R.id.mute_action_fab);
+
+
+
 
         /*
          * Get shared preferences to read settings
@@ -608,6 +613,8 @@ public class VideoActivity extends AppCompatActivity {
         connectActionFab.setOnClickListener(connectActionClickListener());
         switchCameraActionFab.show();
         switchCameraActionFab.setOnClickListener(switchCameraClickListener());
+        refreshTrackActionFab.show();
+        refreshTrackActionFab.setOnClickListener(refreshCamereaClickListener());
         localVideoActionFab.show();
         localVideoActionFab.setOnClickListener(localVideoClickListener());
         muteActionFab.show();
@@ -1260,6 +1267,7 @@ public class VideoActivity extends AppCompatActivity {
         };
     }
 
+
     private DialogInterface.OnClickListener connectClickListener(final EditText roomEditText) {
         System.out.println("--------OnClickListener");
         return (dialog, which) -> {
@@ -1292,6 +1300,19 @@ public class VideoActivity extends AppCompatActivity {
             connectDialog.dismiss();
         };
     }
+
+
+    private View.OnClickListener refreshCamereaClickListener() {
+        return v -> {
+            onPause();
+
+
+            onResume();
+
+
+        };
+    }
+
 
     private View.OnClickListener switchCameraClickListener() {
 
