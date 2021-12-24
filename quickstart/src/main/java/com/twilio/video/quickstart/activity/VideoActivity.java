@@ -107,6 +107,7 @@ public class VideoActivity extends AppCompatActivity {
      */
     private String accessToken;
 
+
     /*
      * A Room represents communication between a local participant and one or more participants.
      */
@@ -149,6 +150,7 @@ public class VideoActivity extends AppCompatActivity {
     private FloatingActionButton localVideoActionFab;
     private FloatingActionButton muteActionFab;
     private FloatingActionButton refreshTrackActionFab;
+    private FloatingActionButton refreshRoomActionFab;
     private ProgressBar reconnectingProgressBar;
     private AlertDialog connectDialog;
     private String remoteParticipantIdentity;
@@ -164,6 +166,10 @@ public class VideoActivity extends AppCompatActivity {
     private boolean disconnectedFromOnDestroy;
     private boolean enableAutomaticSubscription;
 
+    // added by moriyama
+    private String roomNameStored;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -174,6 +180,10 @@ public class VideoActivity extends AppCompatActivity {
         reconnectingProgressBar = findViewById(R.id.reconnecting_progress_bar);
 
         connectActionFab = findViewById(R.id.connect_action_fab);
+
+        refreshRoomActionFab = findViewById(R.id.refresh_video_room); //  refresh token
+
+        
         refreshTrackActionFab = findViewById(R.id.refresh_video_track); //  refresh token
         switchCameraActionFab = findViewById(R.id.switch_camera_action_fab); // camera switching
         localVideoActionFab = findViewById(R.id.local_video_action_fab);
@@ -537,6 +547,7 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private void connectToRoom(String roomName) {
+        roomNameStored = roomName;
         System.out.println("connectToRoom----------------");
         System.out.println(accessToken);
         audioSwitch.activate();
@@ -613,6 +624,11 @@ public class VideoActivity extends AppCompatActivity {
         connectActionFab.setOnClickListener(connectActionClickListener());
         switchCameraActionFab.show();
         switchCameraActionFab.setOnClickListener(switchCameraClickListener());
+
+        refreshRoomActionFab.show();
+        refreshRoomActionFab.setOnClickListener(refreshRoomClickListener());
+
+
         refreshTrackActionFab.show();
         refreshTrackActionFab.setOnClickListener(refreshCamereaClickListener());
         localVideoActionFab.show();
@@ -1278,6 +1294,8 @@ public class VideoActivity extends AppCompatActivity {
         };
     }
 
+
+
     private View.OnClickListener disconnectClickListener() {
         return v -> {
             /*
@@ -1302,11 +1320,25 @@ public class VideoActivity extends AppCompatActivity {
     }
 
 
+
+
+    private View.OnClickListener refreshRoomClickListener(){
+        System.out.println("<<<<<<<<<<<<<<<<<refreshRoomClickListener");
+        return v -> {
+
+            if (room != null) {
+                room.disconnect();
+            }
+            if(roomNameStored != null){
+                connectToRoom(roomNameStored);
+            }else{
+                connectToRoom("aaa");
+            }
+        };
+    }
     private View.OnClickListener refreshCamereaClickListener() {
         return v -> {
             onPause();
-
-
             onResume();
 
 
