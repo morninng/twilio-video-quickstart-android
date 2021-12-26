@@ -168,10 +168,12 @@ public class VideoActivity extends AppCompatActivity {
 
     // added by moriyama
     private String roomNameStored;
+    private boolean isRefresh;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        isRefresh = false;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video);
 
@@ -215,7 +217,7 @@ public class VideoActivity extends AppCompatActivity {
                         updateAudioDeviceIcon(audioDevice);
                         return Unit.INSTANCE;
                     });
-            createAudioAndVideoTracks();
+            createAudioAndVideoTracks();   // main customization part
             setAccessToken();
         }
 
@@ -320,8 +322,16 @@ public class VideoActivity extends AppCompatActivity {
         if (localVideoTrack == null && checkPermissionForCameraAndMicrophone()) {
 
             System.out.println("<<<<<<<<<<< create local track by resume >>>>>>>>>>>>>>>");
+            VideoFormat videoFormat;
+            if(isRefresh){
+                System.out.println("<<<<<<<<<< video format with VGA dimension for refresh");
+            videoFormat = new VideoFormat(VideoDimensions.VGA_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+            }else{
+                System.out.println("<<<<<<<<<< video format with 1080 dimension original");
+                
+            videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+            }
 
-            VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
 
 
             localVideoTrack =
@@ -458,6 +468,14 @@ public class VideoActivity extends AppCompatActivity {
         requestPermissions(permissionsList);
     }
 
+
+
+
+
+
+
+    // main customization part
+
     private <VideoConstraints> void createAudioAndVideoTracks() {
         // Share your microphone
         localAudioTrack = LocalAudioTrack.create(this, true, LOCAL_AUDIO_TRACK_NAME);
@@ -547,6 +565,9 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private void connectToRoom(String roomName) {
+
+
+        
         roomNameStored = roomName;
         System.out.println("connectToRoom----------------");
         System.out.println(accessToken);
@@ -1323,6 +1344,7 @@ public class VideoActivity extends AppCompatActivity {
 
 
     private View.OnClickListener refreshRoomClickListener(){
+        isRefresh = true;
         System.out.println("<<<<<<<<<<<<<<<<<refreshRoomClickListener");
         return v -> {
 
@@ -1336,7 +1358,14 @@ public class VideoActivity extends AppCompatActivity {
             }
         };
     }
+
+
+
+
+
     private View.OnClickListener refreshCamereaClickListener() {
+
+        isRefresh = true;
         return v -> {
             onPause();
             onResume();
