@@ -343,7 +343,7 @@ public class VideoActivity extends AppCompatActivity {
              * If connected to a Room then share the local video track.
              */
             if (localParticipant != null) {
-                localParticipant.publishTrack(localVideoTrack);
+                localParticipant.publishTrack(localVideoTrack, {priority: 'high'});
 
                 /*
                  * Update encoding parameters if they have changed.
@@ -381,7 +381,7 @@ public class VideoActivity extends AppCompatActivity {
              * unpublished.
              */
             if (localParticipant != null) {
-                localParticipant.unpublishTrack(localVideoTrack);
+                localParticipant.unpublishTrack(localVideoTrack, {priority: 'high'});
             }
 
             localVideoTrack.release();
