@@ -348,6 +348,10 @@ public class VideoActivity extends AppCompatActivity {
              * If connected to a Room then share the local video track.
              */
             if (localParticipant != null) {
+                System.out.println("------------------track priority high is set -----------------");
+                System.out.println("------------------track priority high is set -----------------");
+                System.out.println("------------------track priority high is set -----------------");
+                System.out.println("------------------track priority high is set -----------------");
                 LocalTrackPublicationOptions localTrackPublicationOptions = new LocalTrackPublicationOptions(TrackPriority.HIGH);
                 localParticipant.publishTrack(localVideoTrack, localTrackPublicationOptions);
 
