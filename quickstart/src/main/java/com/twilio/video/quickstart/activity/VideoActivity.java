@@ -42,6 +42,7 @@ import com.twilio.video.H264Codec;
 import com.twilio.video.IsacCodec;
 import com.twilio.video.LocalAudioTrack;
 import com.twilio.video.LocalParticipant;
+import com.twilio.video.LocalTrackPublicationOptions;
 import com.twilio.video.LocalVideoTrack;
 import com.twilio.video.OpusCodec;
 import com.twilio.video.PcmaCodec;
@@ -285,6 +286,10 @@ public class VideoActivity extends AppCompatActivity {
         }
     }
 
+
+
+
+
     @SuppressLint("SetTextI18n")
     @Override
     protected void onResume() {
@@ -343,7 +348,8 @@ public class VideoActivity extends AppCompatActivity {
              * If connected to a Room then share the local video track.
              */
             if (localParticipant != null) {
-                localParticipant.publishTrack(localVideoTrack, {priority: 'high'});
+                LocalTrackPublicationOptions localTrackPublicationOptions = new LocalTrackPublicationOptions(TrackPriority.HIGH);
+                localParticipant.publishTrack(localVideoTrack, localTrackPublicationOptions);
 
                 /*
                  * Update encoding parameters if they have changed.
@@ -381,7 +387,7 @@ public class VideoActivity extends AppCompatActivity {
              * unpublished.
              */
             if (localParticipant != null) {
-                localParticipant.unpublishTrack(localVideoTrack, {priority: 'high'});
+                localParticipant.unpublishTrack(localVideoTrack);
             }
 
             localVideoTrack.release();
@@ -587,6 +593,7 @@ public class VideoActivity extends AppCompatActivity {
          */
         if (localVideoTrack != null) {
             connectOptionsBuilder.videoTracks(Collections.singletonList(localVideoTrack));
+
         }
 
         /*
@@ -632,6 +639,11 @@ public class VideoActivity extends AppCompatActivity {
 
         System.out.println("<<<<<<<<<<<<<<<<<<connect connect connect>>>>>>>>>>>>>>");
         room = Video.connect(this, connectOptionsBuilder.build(), roomListener());
+
+
+
+
+
         setDisconnectAction();
     }
 
@@ -914,12 +926,20 @@ public class VideoActivity extends AppCompatActivity {
             public void onConnected(Room room) {
                 System.out.println("--------onConnected");
                 localParticipant = room.getLocalParticipant();
+
+
+
                 setTitle(room.getName());
 
                 for (RemoteParticipant remoteParticipant : room.getRemoteParticipants()) {
                     addRemoteParticipant(remoteParticipant);
                     break;
                 }
+
+
+        onPause();
+        onResume();
+
             }
 
             @Override
