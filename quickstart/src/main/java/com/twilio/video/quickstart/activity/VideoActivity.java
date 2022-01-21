@@ -44,6 +44,7 @@ import com.twilio.video.LocalAudioTrack;
 import com.twilio.video.LocalParticipant;
 import com.twilio.video.LocalTrackPublicationOptions;
 import com.twilio.video.LocalVideoTrack;
+import com.twilio.video.LocalVideoTrackPublication;
 import com.twilio.video.OpusCodec;
 import com.twilio.video.PcmaCodec;
 import com.twilio.video.PcmuCodec;
@@ -73,11 +74,16 @@ import com.twilio.video.quickstart.BuildConfig;
 import com.twilio.video.quickstart.R;
 import com.twilio.video.quickstart.dialog.Dialog;
 import com.twilio.video.quickstart.util.CameraCapturerCompat;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.UUID;
+import java.util.Timer;
 import kotlin.Unit;
+import kotlin.concurrent.TimersKt;
 import tvi.webrtc.VideoSink;
 
 public class VideoActivity extends AppCompatActivity {
@@ -349,11 +355,31 @@ public class VideoActivity extends AppCompatActivity {
              */
             if (localParticipant != null) {
                 System.out.println("------------------track priority high is set -----------------");
-                System.out.println("------------------track priority high is set -----------------");
-                System.out.println("------------------track priority high is set -----------------");
-                System.out.println("------------------track priority high is set -----------------");
                 LocalTrackPublicationOptions localTrackPublicationOptions = new LocalTrackPublicationOptions(TrackPriority.HIGH);
                 localParticipant.publishTrack(localVideoTrack, localTrackPublicationOptions);
+
+
+                TimerTask task = new TimerTask() {
+                    public void run() {
+                        System.out.println("-------------------- timer run");
+                        List<LocalVideoTrackPublication> localVideotrackPublicationList = localParticipant.getLocalVideoTracks();
+
+                        int size = localVideotrackPublicationList.size();
+                        if(size > 0){
+                            System.out.println("-------------------- localvideopublication exist");
+                            LocalVideoTrackPublication localVideotrackPublication =  localVideotrackPublicationList.get(0);
+                            TrackPriority priority = localVideotrackPublication.getPriority();
+                            Log.d("ssss", "<<<<<<<<<<----------->>>>>>>>>> priority >>>>>>>>>>> " + priority);
+                        }else{
+                            System.out.println("-------------------- no localvideopublication");
+                        }
+                    }
+                };
+
+                Timer timer = new Timer();
+                timer.schedule(task, 10000, 5000);
+
+
 
                 /*
                  * Update encoding parameters if they have changed.
@@ -377,6 +403,8 @@ public class VideoActivity extends AppCompatActivity {
                     (room.getState() != Room.State.RECONNECTING) ? View.GONE : View.VISIBLE);
         }
     }
+
+
 
     @Override
     protected void onPause() {
