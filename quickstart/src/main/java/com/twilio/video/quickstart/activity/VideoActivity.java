@@ -354,32 +354,12 @@ public class VideoActivity extends AppCompatActivity {
              * If connected to a Room then share the local video track.
              */
             if (localParticipant != null) {
-                System.out.println("------------------track priority high is set -----------------");
-                LocalTrackPublicationOptions localTrackPublicationOptions = new LocalTrackPublicationOptions(TrackPriority.HIGH);
-                localParticipant.publishTrack(localVideoTrack, localTrackPublicationOptions);
 
 
-                TimerTask task = new TimerTask() {
-                    public void run() {
-                        System.out.println("-------------------- timer run");
-                        List<LocalVideoTrackPublication> localVideotrackPublicationList = localParticipant.getLocalVideoTracks();
+                System.out.println("-----------------publish switch --------------");
 
-                        int size = localVideotrackPublicationList.size();
-                        if(size > 0){
-                            System.out.println("-------------------- localvideopublication exist");
-                            LocalVideoTrackPublication localVideotrackPublication =  localVideotrackPublicationList.get(0);
-                            TrackPriority priority = localVideotrackPublication.getPriority();
-                            Log.d("ssss", "<<<<<<<<<<----------->>>>>>>>>> priority >>>>>>>>>>> " + priority);
-                        }else{
-                            System.out.println("-------------------- no localvideopublication");
-                        }
-                    }
-                };
-
-                Timer timer = new Timer();
-                timer.schedule(task, 10000, 5000);
-
-
+//                publishVideoTrackWithPriorityXXX();
+                publishVideoTrack();
 
                 /*
                  * Update encoding parameters if they have changed.
@@ -403,6 +383,77 @@ public class VideoActivity extends AppCompatActivity {
                     (room.getState() != Room.State.RECONNECTING) ? View.GONE : View.VISIBLE);
         }
     }
+
+
+    private void publishVideoTrack(){
+        System.out.println("-----------------publishPriorityXxxxVideo -----------------");
+        localParticipant.publishTrack(localVideoTrack);
+    }
+
+    private void publishVideoTrackWithPriorityXXX(){
+                System.out.println("-----------------publishPriorityXxxxVideo -----------------");
+                LocalTrackPublicationOptions localTrackPublicationOptions = new LocalTrackPublicationOptions(TrackPriority.HIGH);
+                localParticipant.publishTrack(localVideoTrack, localTrackPublicationOptions);
+    }
+
+
+    private void setPriorityTimer(){
+
+                TimerTask task = new TimerTask() {
+                    public void run() {
+                        getPriority();
+                    }
+                };
+
+                Timer timer = new Timer();
+                timer.schedule(task, 10000, 5000);
+    }
+
+
+    protected void getPriority() {
+        List<LocalVideoTrackPublication> localVideotrackPublicationList = localParticipant.getLocalVideoTracks();
+
+        int size = localVideotrackPublicationList.size();
+        if(size > 0){
+            System.out.println("-------------------- localvideopublication exist");
+            LocalVideoTrackPublication localVideotrackPublication =  localVideotrackPublicationList.get(0);
+            if(localVideotrackPublication != null){
+
+                TrackPriority priority = localVideotrackPublication.getPriority();
+                Log.d("ssss", "<<<<<<<<<<----------->>>>>>>>>> priority >>>>>>>>>>> " + priority);
+            }else{
+
+                Log.d("ssss", "<<<<<<<<<<------localVideotrackPublication is null ----->>>>>> ");
+            }
+
+        }else{
+            System.out.println("-------------------- no localvideopublication");
+        }
+    }
+
+
+
+
+    protected void setPriorityXXXX() {
+        List<LocalVideoTrackPublication> localVideotrackPublicationList = localParticipant.getLocalVideoTracks();
+
+        int size = localVideotrackPublicationList.size();
+        if(size > 0){
+            System.out.println("-------------------- localvideopublication exist");
+            LocalVideoTrackPublication localVideotrackPublication =  localVideotrackPublicationList.get(0);
+            if(localVideotrackPublication != null){
+
+                localVideotrackPublication.setPriority(TrackPriority.HIGH);
+                Log.d("ssss", "<<<<<<<<<<----------->>>>>>>>>> setPriorityXXXX >>>>>>>>>>> ");
+            }else{
+                Log.d("ssss", "<<<<<<<<<<------localVideotrackPublication is null ----->>>>>> ");
+
+            }
+        }else{
+            System.out.println("-------------------- no localvideopublication");
+        }
+    }
+
 
 
 
@@ -967,10 +1018,8 @@ public class VideoActivity extends AppCompatActivity {
                     addRemoteParticipant(remoteParticipant);
                     break;
                 }
-
-
-        onPause();
-        onResume();
+                setPriorityTimer();
+                setPriorityXXXX();
 
             }
 
