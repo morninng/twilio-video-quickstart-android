@@ -32,6 +32,9 @@ import com.twilio.audioswitch.AudioDevice.Speakerphone;
 import com.twilio.audioswitch.AudioDevice.WiredHeadset;
 import com.twilio.audioswitch.AudioSwitch;
 import com.twilio.video.AudioCodec;
+import com.twilio.video.BandwidthProfileMode;
+import com.twilio.video.BandwidthProfileOptions;
+import com.twilio.video.ClientTrackSwitchOffControl;
 import com.twilio.video.ConnectOptions;
 import com.twilio.video.EncodingParameters;
 import com.twilio.video.G722Codec;
@@ -39,7 +42,9 @@ import com.twilio.video.H264Codec;
 import com.twilio.video.IsacCodec;
 import com.twilio.video.LocalAudioTrack;
 import com.twilio.video.LocalParticipant;
+import com.twilio.video.LocalTrackPublicationOptions;
 import com.twilio.video.LocalVideoTrack;
+import com.twilio.video.LocalVideoTrackPublication;
 import com.twilio.video.OpusCodec;
 import com.twilio.video.PcmaCodec;
 import com.twilio.video.PcmuCodec;
@@ -51,9 +56,16 @@ import com.twilio.video.RemoteParticipant;
 import com.twilio.video.RemoteVideoTrack;
 import com.twilio.video.RemoteVideoTrackPublication;
 import com.twilio.video.Room;
+import com.twilio.video.TrackPriority;
+import com.twilio.video.TrackSwitchOffMode;
 import com.twilio.video.TwilioException;
 import com.twilio.video.Video;
+import com.twilio.video.VideoBandwidthProfileOptions;
 import com.twilio.video.VideoCodec;
+import com.twilio.video.VideoContentPreferences;
+import com.twilio.video.VideoContentPreferencesMode;
+import com.twilio.video.VideoDimensions;
+import com.twilio.video.VideoFormat;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 import com.twilio.video.Vp8Codec;
@@ -62,11 +74,16 @@ import com.twilio.video.quickstart.BuildConfig;
 import com.twilio.video.quickstart.R;
 import com.twilio.video.quickstart.dialog.Dialog;
 import com.twilio.video.quickstart.util.CameraCapturerCompat;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.UUID;
+import java.util.Timer;
 import kotlin.Unit;
+import kotlin.concurrent.TimersKt;
 import tvi.webrtc.VideoSink;
 
 public class VideoActivity extends AppCompatActivity {
@@ -96,6 +113,7 @@ public class VideoActivity extends AppCompatActivity {
      * or the request to the token server.
      */
     private String accessToken;
+
 
     /*
      * A Room represents communication between a local participant and one or more participants.
@@ -131,12 +149,15 @@ public class VideoActivity extends AppCompatActivity {
      * Android application UI elements
      */
     private CameraCapturerCompat cameraCapturerCompat;
+//    private VideoFormat videoFormat;
     private LocalAudioTrack localAudioTrack;
     private LocalVideoTrack localVideoTrack;
     private FloatingActionButton connectActionFab;
     private FloatingActionButton switchCameraActionFab;
     private FloatingActionButton localVideoActionFab;
     private FloatingActionButton muteActionFab;
+    private FloatingActionButton refreshTrackActionFab;
+    private FloatingActionButton refreshRoomActionFab;
     private ProgressBar reconnectingProgressBar;
     private AlertDialog connectDialog;
     private String remoteParticipantIdentity;
@@ -152,8 +173,14 @@ public class VideoActivity extends AppCompatActivity {
     private boolean disconnectedFromOnDestroy;
     private boolean enableAutomaticSubscription;
 
+    // added by moriyama
+    private String roomNameStored;
+    private boolean isRefresh;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        isRefresh = false;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video);
 
@@ -162,9 +189,17 @@ public class VideoActivity extends AppCompatActivity {
         reconnectingProgressBar = findViewById(R.id.reconnecting_progress_bar);
 
         connectActionFab = findViewById(R.id.connect_action_fab);
-        switchCameraActionFab = findViewById(R.id.switch_camera_action_fab);
+
+        refreshRoomActionFab = findViewById(R.id.refresh_video_room); //  refresh token
+
+        
+        refreshTrackActionFab = findViewById(R.id.refresh_video_track); //  refresh token
+        switchCameraActionFab = findViewById(R.id.switch_camera_action_fab); // camera switching
         localVideoActionFab = findViewById(R.id.local_video_action_fab);
         muteActionFab = findViewById(R.id.mute_action_fab);
+
+
+
 
         /*
          * Get shared preferences to read settings
@@ -189,7 +224,7 @@ public class VideoActivity extends AppCompatActivity {
                         updateAudioDeviceIcon(audioDevice);
                         return Unit.INSTANCE;
                     });
-            createAudioAndVideoTracks();
+            createAudioAndVideoTracks();   // main customization part
             setAccessToken();
         }
 
@@ -257,9 +292,17 @@ public class VideoActivity extends AppCompatActivity {
         }
     }
 
+
+
+
+
     @SuppressLint("SetTextI18n")
     @Override
     protected void onResume() {
+
+        System.out.println("<<<<<<<<<<onResume>>>>>>>>>>>>>");
+
+
         super.onResume();
         /*
          * Update preferred audio and video codec in case changed in settings
@@ -284,17 +327,39 @@ public class VideoActivity extends AppCompatActivity {
         /*
          * If the local video track was released when the app was put in the background, recreate.
          */
+
+
+
         if (localVideoTrack == null && checkPermissionForCameraAndMicrophone()) {
+
+            System.out.println("<<<<<<<<<<< create local track by resume >>>>>>>>>>>>>>>");
+            VideoFormat videoFormat;
+            if(isRefresh){
+                System.out.println("<<<<<<<<<< video format with VGA dimension for refresh");
+            videoFormat = new VideoFormat(VideoDimensions.VGA_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+            }else{
+                System.out.println("<<<<<<<<<< video format with 1080 dimension original");
+                
+            videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+            }
+
+
+
             localVideoTrack =
                     LocalVideoTrack.create(
-                            this, true, cameraCapturerCompat, LOCAL_VIDEO_TRACK_NAME);
+                            this, true, cameraCapturerCompat, videoFormat, LOCAL_VIDEO_TRACK_NAME);
             localVideoTrack.addSink(localVideoView);
 
             /*
              * If connected to a Room then share the local video track.
              */
             if (localParticipant != null) {
-                localParticipant.publishTrack(localVideoTrack);
+
+
+                System.out.println("-----------------publish switch --------------");
+
+//                publishVideoTrackWithPriorityXXX();
+                publishVideoTrack();
 
                 /*
                  * Update encoding parameters if they have changed.
@@ -318,6 +383,79 @@ public class VideoActivity extends AppCompatActivity {
                     (room.getState() != Room.State.RECONNECTING) ? View.GONE : View.VISIBLE);
         }
     }
+
+
+    private void publishVideoTrack(){
+        System.out.println("-----------------publishPriorityXxxxVideo -----------------");
+        localParticipant.publishTrack(localVideoTrack);
+    }
+
+    private void publishVideoTrackWithPriorityXXX(){
+                System.out.println("-----------------publishPriorityXxxxVideo -----------------");
+                LocalTrackPublicationOptions localTrackPublicationOptions = new LocalTrackPublicationOptions(TrackPriority.HIGH);
+                localParticipant.publishTrack(localVideoTrack, localTrackPublicationOptions);
+    }
+
+
+    private void setPriorityTimer(){
+
+                TimerTask task = new TimerTask() {
+                    public void run() {
+                        getPriority();
+                    }
+                };
+
+                Timer timer = new Timer();
+                timer.schedule(task, 10000, 5000);
+    }
+
+
+    protected void getPriority() {
+        List<LocalVideoTrackPublication> localVideotrackPublicationList = localParticipant.getLocalVideoTracks();
+
+        int size = localVideotrackPublicationList.size();
+        if(size > 0){
+            System.out.println("-------------------- localvideopublication exist");
+            LocalVideoTrackPublication localVideotrackPublication =  localVideotrackPublicationList.get(0);
+            if(localVideotrackPublication != null){
+
+                TrackPriority priority = localVideotrackPublication.getPriority();
+                Log.d("ssss", "<<<<<<<<<<----------->>>>>>>>>> priority >>>>>>>>>>> " + priority);
+            }else{
+
+                Log.d("ssss", "<<<<<<<<<<------localVideotrackPublication is null ----->>>>>> ");
+            }
+
+        }else{
+            System.out.println("-------------------- no localvideopublication");
+        }
+    }
+
+
+
+
+    protected void setPriorityXXXX() {
+        List<LocalVideoTrackPublication> localVideotrackPublicationList = localParticipant.getLocalVideoTracks();
+
+        int size = localVideotrackPublicationList.size();
+        if(size > 0){
+            System.out.println("-------------------- localvideopublication exist");
+            LocalVideoTrackPublication localVideotrackPublication =  localVideotrackPublicationList.get(0);
+            if(localVideotrackPublication != null){
+
+                localVideotrackPublication.setPriority(TrackPriority.HIGH);
+                Log.d("ssss", "<<<<<<<<<<----------->>>>>>>>>> setPriorityXXXX >>>>>>>>>>> ");
+            }else{
+                Log.d("ssss", "<<<<<<<<<<------localVideotrackPublication is null ----->>>>>> ");
+
+            }
+        }else{
+            System.out.println("-------------------- no localvideopublication");
+        }
+    }
+
+
+
 
     @Override
     protected void onPause() {
@@ -419,21 +557,71 @@ public class VideoActivity extends AppCompatActivity {
         requestPermissions(permissionsList);
     }
 
-    private void createAudioAndVideoTracks() {
+
+
+
+
+
+
+    // main customization part
+
+    private <VideoConstraints> void createAudioAndVideoTracks() {
         // Share your microphone
         localAudioTrack = LocalAudioTrack.create(this, true, LOCAL_AUDIO_TRACK_NAME);
 
         // Share your camera
         cameraCapturerCompat =
                 new CameraCapturerCompat(this, CameraCapturerCompat.Source.FRONT_CAMERA);
+
+
+
+
+
+
+        // updated
+
+
+
+// HD_1080P_VIDEO_DIMENSIONS
+// HD Widescreen 1080P (1920 x 1080) resolution
+
+//HD_720P_VIDEO_DIMENSIONS
+//HD 720P (1280 x 720) resolution
+//        HD_960P_VIDEO_DIMENSIONS
+//        HD 960P (1280 x 960) resolution
+//HD_540P_VIDEO_DIMENSIONS
+//HD 540P (960 x 540) resolution
+
+//        CIF_VIDEO_DIMENSIONS
+//CIF (352 x 288) resolution in 1.22:1 aspect ratio
+
+        // VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_720P_VIDEO_DIMENSIONS, 30); //
+
+        // VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 30); //HD_1080P_VIDEO_DIMENSIONS
+//        VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+        VideoFormat videoFormat = new VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 15); //HD_1080P_VIDEO_DIMENSIONS
+
+
+
+//        VideoConstraints videoConstraints =
+//                new VideoConstraints.Builder()
+//                        .maxFps(24)
+//                        .maxVideoDimensions(VideoDimensions.VGA_VIDEO_DIMENSIONS)
+//                        .build();
+
+
+
+        System.out.println("<<<<<<<<<<<<<<< original local video track create >>>>>>>>>>>");
+
         localVideoTrack =
-                LocalVideoTrack.create(this, true, cameraCapturerCompat, LOCAL_VIDEO_TRACK_NAME);
+                LocalVideoTrack.create(this, true, cameraCapturerCompat,videoFormat , LOCAL_VIDEO_TRACK_NAME);
         primaryVideoView.setMirror(true);
         localVideoTrack.addSink(primaryVideoView);
         localVideoView = primaryVideoView;
     }
 
     private void setAccessToken() {
+        System.out.println(">>>>>> setAccessToken setAccessToken<<<<<<<<<<<<<<<<<<");
         if (!BuildConfig.USE_TOKEN_SERVER) {
             /*
              * OPTION 1 - Generate an access token from the getting started portal
@@ -441,19 +629,37 @@ public class VideoActivity extends AppCompatActivity {
              * the variable TWILIO_ACCESS_TOKEN setting it equal to the access token
              * string in your local.properties file.
              */
+
+
+
+
+
+            System.out.println("-----ee------ WILIO_ACCESS_TOKEN -----");
+            System.out.println(TWILIO_ACCESS_TOKEN);
             this.accessToken = TWILIO_ACCESS_TOKEN;
         } else {
+            System.out.println("----------  USE_TOKEN_SERVER -------------");
             /*
              * OPTION 2 - Retrieve an access token from your own web app.
              * Add the variable ACCESS_TOKEN_SERVER assigning it to the url of your
              * token server and the variable USE_TOKEN_SERVER=true to your
              * local.properties file.
              */
+
+
+
+             
             retrieveAccessTokenfromServer();
         }
     }
 
     private void connectToRoom(String roomName) {
+
+
+        
+        roomNameStored = roomName;
+        System.out.println("connectToRoom----------------");
+        System.out.println(accessToken);
         audioSwitch.activate();
         ConnectOptions.Builder connectOptionsBuilder =
                 new ConnectOptions.Builder(accessToken).roomName(roomName);
@@ -470,6 +676,7 @@ public class VideoActivity extends AppCompatActivity {
          */
         if (localVideoTrack != null) {
             connectOptionsBuilder.videoTracks(Collections.singletonList(localVideoTrack));
+
         }
 
         /*
@@ -490,9 +697,36 @@ public class VideoActivity extends AppCompatActivity {
          * published. If unset, the default is true. Note: This feature is only available for Group
          * Rooms. Toggling the flag in a P2P room does not modify subscription behavior.
          */
-        connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription);
 
+        // updated part
+
+
+        connectOptionsBuilder.enableAutomaticSubscription(enableAutomaticSubscription)
+                .bandwidthProfile(new BandwidthProfileOptions(new VideoBandwidthProfileOptions.Builder()
+                        .dominantSpeakerPriority(TrackPriority.HIGH)
+//                        .dominantSpeakerPriority(TrackPriority.LOW)
+                        // .dominantSpeakerPriority(TrackPriority.STANDARD)
+                        .mode(BandwidthProfileMode.PRESENTATION)
+                        // .mode(BandwidthProfileMode.GRID) // default
+//                        .trackSwitchOffMode(TrackSwitchOffMode.DETECTED)
+//                          .trackSwitchOffMode(TrackSwitchOffMode.PREDICTED) // default
+                        .trackSwitchOffMode(TrackSwitchOffMode.DISABLED)
+                         .clientTrackSwitchOffControl(ClientTrackSwitchOffControl.AUTO)
+                        .videoContentPreferencesMode(VideoContentPreferencesMode.MANUAL) // 影響大きそう。
+//                         .videoContentPreferencesMode(VideoContentPreferencesMode.AUTO) // default
+                        .maxSubscriptionBitrate(0L)
+                        .build()
+                ));
+
+
+
+        System.out.println("<<<<<<<<<<<<<<<<<<connect connect connect>>>>>>>>>>>>>>");
         room = Video.connect(this, connectOptionsBuilder.build(), roomListener());
+
+
+
+
+
         setDisconnectAction();
     }
 
@@ -506,6 +740,13 @@ public class VideoActivity extends AppCompatActivity {
         connectActionFab.setOnClickListener(connectActionClickListener());
         switchCameraActionFab.show();
         switchCameraActionFab.setOnClickListener(switchCameraClickListener());
+
+        refreshRoomActionFab.show();
+        refreshRoomActionFab.setOnClickListener(refreshRoomClickListener());
+
+
+        refreshTrackActionFab.show();
+        refreshTrackActionFab.setOnClickListener(refreshCamereaClickListener());
         localVideoActionFab.show();
         localVideoActionFab.setOnClickListener(localVideoClickListener());
         muteActionFab.show();
@@ -640,6 +881,7 @@ public class VideoActivity extends AppCompatActivity {
      * Creates an connect UI dialog
      */
     private void showConnectDialog() {
+        System.out.println("--------showConnectDialog");
         EditText roomEditText = new EditText(this);
         connectDialog =
                 Dialog.createConnectDialog(
@@ -760,16 +1002,25 @@ public class VideoActivity extends AppCompatActivity {
      */
     @SuppressLint("SetTextI18n")
     private Room.Listener roomListener() {
-        return new Room.Listener() {
+
+    System.out.println("--------roomListener");
+    return new Room.Listener() {
             @Override
             public void onConnected(Room room) {
+                System.out.println("--------onConnected");
                 localParticipant = room.getLocalParticipant();
+
+
+
                 setTitle(room.getName());
 
                 for (RemoteParticipant remoteParticipant : room.getRemoteParticipants()) {
                     addRemoteParticipant(remoteParticipant);
                     break;
                 }
+                setPriorityTimer();
+                setPriorityXXXX();
+
             }
 
             @Override
@@ -785,12 +1036,31 @@ public class VideoActivity extends AppCompatActivity {
 
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
+
+                System.out.println("--------onConnectFailu1re");
+                System.out.println("--------onConnectFailur2e");
+                System.out.println("--------onConnectFailure3");
+                System.out.println("--------onConnectFailure4");
+                System.out.println("--------onConnectFailure5");
+                System.out.println("--------onConnectFailure6");
+                System.out.println("--------onConnectFailure7");
+                System.out.println("--------onConnectFailure8");
+                System.out.println("--------onConnectFailure9");
+                System.out.println("--------onConnectFailure");
+                System.out.println("--------onConnectFailure");
+                System.out.println("--------onConnectFailure");
+                System.out.println("--------onConnectFailure");
+                System.out.println("--------onConnectFailure");
+                System.out.println("ddd");
+                System.out.println(room);
+                System.out.println(e);
                 audioSwitch.deactivate();
                 intializeUI();
             }
 
             @Override
             public void onDisconnected(Room room, TwilioException e) {
+                System.out.println("--------onDisconnected");
                 localParticipant = null;
                 reconnectingProgressBar.setVisibility(View.GONE);
                 VideoActivity.this.room = null;
@@ -804,6 +1074,7 @@ public class VideoActivity extends AppCompatActivity {
 
             @Override
             public void onParticipantConnected(Room room, RemoteParticipant remoteParticipant) {
+                System.out.println("--------onParticipantConnected");
                 addRemoteParticipant(remoteParticipant);
             }
 
@@ -1061,6 +1332,11 @@ public class VideoActivity extends AppCompatActivity {
                                 remoteParticipant.getIdentity(),
                                 remoteVideoTrack.isEnabled(),
                                 remoteVideoTrack.getName()));
+
+   // updated part
+
+
+               remoteVideoTrack.setContentPreferences(new VideoContentPreferences(new VideoDimensions(1280, 720)));
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
@@ -1129,7 +1405,9 @@ public class VideoActivity extends AppCompatActivity {
         };
     }
 
+
     private DialogInterface.OnClickListener connectClickListener(final EditText roomEditText) {
+        System.out.println("--------OnClickListener");
         return (dialog, which) -> {
             /*
              * Connect to room
@@ -1137,6 +1415,8 @@ public class VideoActivity extends AppCompatActivity {
             connectToRoom(roomEditText.getText().toString());
         };
     }
+
+
 
     private View.OnClickListener disconnectClickListener() {
         return v -> {
@@ -1161,10 +1441,53 @@ public class VideoActivity extends AppCompatActivity {
         };
     }
 
+
+
+
+    private View.OnClickListener refreshRoomClickListener(){
+        isRefresh = true;
+        System.out.println("<<<<<<<<<<<<<<<<<refreshRoomClickListener");
+        return v -> {
+
+            if (room != null) {
+                room.disconnect();
+            }
+            if(roomNameStored != null){
+                connectToRoom(roomNameStored);
+            }else{
+                connectToRoom("aaa");
+            }
+        };
+    }
+
+
+
+
+
+    private View.OnClickListener refreshCamereaClickListener() {
+
+        isRefresh = true;
+        return v -> {
+            onPause();
+            onResume();
+
+
+        };
+    }
+
+
     private View.OnClickListener switchCameraClickListener() {
+
+        // camera in out switch
+
+        System.out.println("<<<<<<<<<<<switchCameraClickListener>>>>>>>>>>>>>>>>>");
+
         return v -> {
             if (cameraCapturerCompat != null) {
                 CameraCapturerCompat.Source cameraSource = cameraCapturerCompat.getCameraSource();
+
+
+
                 cameraCapturerCompat.switchCamera();
                 if (thumbnailVideoView.getVisibility() == View.VISIBLE) {
                     thumbnailVideoView.setMirror(
@@ -1216,6 +1539,8 @@ public class VideoActivity extends AppCompatActivity {
     }
 
     private void retrieveAccessTokenfromServer() {
+        System.out.println("-------------- retrieveAccessTokenfromServer");
+        System.out.println(ACCESS_TOKEN_SERVER);
         Ion.with(this)
                 .load(
                         String.format(
@@ -1224,6 +1549,8 @@ public class VideoActivity extends AppCompatActivity {
                 .asString()
                 .setCallback(
                         (e, token) -> {
+                            System.out.println("-------------- retrieveAccessTokenfromServer token");
+                            System.out.println(token);
                             if (e == null) {
                                 VideoActivity.this.accessToken = token;
                             } else {

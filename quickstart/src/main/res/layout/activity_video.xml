@@ -17,6 +17,25 @@
         android:orientation="vertical" >
 
         <android.support.design.widget.FloatingActionButton
+            android:id="@+id/refresh_video_room"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:fabSize="mini"
+            android:layout_marginBottom="@dimen/fab_margin"
+            android:src="@drawable/ic_switch_camera_white_24dp" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/refresh_video_track"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:fabSize="mini"
+            android:layout_marginBottom="@dimen/fab_margin"
+            android:src="@drawable/ic_switch_camera_white_24dp" />
+
+
+        <android.support.design.widget.FloatingActionButton
             android:id="@+id/switch_camera_action_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
